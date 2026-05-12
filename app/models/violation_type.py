@@ -43,7 +43,7 @@ class ViolationType(Base):
 
 # Data seed awal
 VIOLATION_TYPE_SEEDS = [
-    {"yolo_class_id": 0, "label_name": "Tidak Pakai Helm", "penalty_score": 3},
-    {"yolo_class_id": 1, "label_name": "Tidak Pakai Rompi", "penalty_score": 2},
-    {"yolo_class_id": 2, "label_name": "Tidak Pakai Sarung Tangan", "penalty_score": 1},
+    {"yolo_class_id": 1, "label_name": "Tidak Pakai Helm", "penalty_score": 3},
+    {"yolo_class_id": 2, "label_name": "Tidak Pakai Rompi", "penalty_score": 2},
+    {"yolo_class_id": 3, "label_name": "Tidak Pakai Sarung Tangan", "penalty_score": 1},
 ]

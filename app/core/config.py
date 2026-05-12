@@ -24,12 +24,10 @@ class Settings(BaseSettings):
     UPLOAD_DIR: str = "uploads"
     MAX_FILE_SIZE: int = 10 * 1024 * 1024  # 10 MB
 
-    # WhatsApp Notification (Fonnte / Wablas / dll)
-    WA_API_URL: str = ""
-    WA_API_TOKEN: str = ""
-    WA_DEFAULT_TARGET: str = ""  # Nomor tujuan default (format: 628xxx)
-    WAHA_USERNAME: str = ""
-    WAHA_PASSWORD: str = ""
+    # WhatsApp Notification (WAHA / Evolution API)
+    WAHA_API_URL: str = "http://localhost:3000/api/sendText"
+    WAHA_API_KEY: str = ""
+    WAHA_GROUP_ID: str = ""
 
     class Config:
         env_file = ".env"

@@ -13,7 +13,7 @@ from app.core.config import settings
 from app.models.camera import Camera
 from app.models.violation_log import ViolationLog, ViolationStatus
 from app.models.violation_type import ViolationType
-from app.schemas.violation_log import ViolationLogCreate
+from app.schemas.violation_log import ViolationLogCreate, ViolationValidate
 
 
 # ── Create ──────────────────────────────────────────────────────────────────
@@ -115,6 +115,23 @@ def update_violation_status(
     db.commit()
     db.refresh(db_log)
     return get_violation_log(db, log_id)  # re-fetch dengan JOIN
+
+
+def validate_violation(
+    db: Session, log_id: int, payload: ViolationValidate
+) -> Optional[ViolationLog]:
+    """Validasi pelanggaran dengan menambahkan nama dan NIP pelanggar."""
+    db_log = db.query(ViolationLog).filter(ViolationLog.id == log_id).first()
+    if not db_log:
+        return None
+    
+    db_log.violator_name = payload.violator_name
+    db_log.violator_nip = payload.violator_nip
+    db_log.status = ViolationStatus.SUDAH_DITINDAK.value
+    
+    db.commit()
+    db.refresh(db_log)
+    return get_violation_log(db, log_id)
 
 
 def bulk_update_violation_status(

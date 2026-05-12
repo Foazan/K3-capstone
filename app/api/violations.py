@@ -25,6 +25,7 @@ from app.schemas.violation_log import (
     ViolationLogRead,
     ViolationStatusUpdate,
     ViolationStatusBulkUpdate,
+    ViolationValidate,
 )
 from app.services import violation_log_service
 from app.services.whatsapp_service import send_whatsapp_group_message
@@ -98,7 +99,6 @@ def get_stats(
     summary="Riwayat pelanggaran",
 )
 def list_violations(
-    _: Annotated[User, Depends(get_current_user)],
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=20, ge=1, le=100),
     camera_id: Optional[int] = Query(default=None, description="Filter kamera"),
@@ -137,7 +137,6 @@ def list_violations(
 )
 def get_violation(
     log_id: int,
-    _: Annotated[User, Depends(get_current_user)],
     db: Session = Depends(get_db),
 ):
     log = violation_log_service.get_violation_log(db, log_id)
@@ -251,36 +250,34 @@ def update_status(
 @router.put(
     "/{violation_id}/validate",
     response_model=ViolationLogRead,
-    summary="Validasi pelanggaran dan kirim WA ke grup",
+    summary="Validasi pelanggaran dengan data pekerja dan kirim WA",
 )
-def validate_violation(
+def validate_violation_endpoint(
     violation_id: int,
+    payload: ViolationValidate,
     background_tasks: BackgroundTasks,
-    current_user: Annotated[User, Depends(require_manager_or_above)],
     db: Session = Depends(get_db),
 ):
     """
-    Memvalidasi pelanggaran (ubah status menjadi 'Sudah Ditindak')
+    Memvalidasi pelanggaran (menambahkan nama dan NIP), 
+    mengubah status menjadi 'Sudah Ditindak',
     lalu mengirim notifikasi ke grup WhatsApp secara asinkron.
     """
-    # a. Cari log pelanggaran
+    # Cek apakah log ada dan belum ditindak
     log = violation_log_service.get_violation_log(db, violation_id)
     if not log:
         raise HTTPException(status_code=404, detail=f"Log ID {violation_id} tidak ditemukan.")
-
-    # b. Cek status
+    
     if log.status == ViolationStatus.SUDAH_DITINDAK:
         raise HTTPException(status_code=400, detail="Pelanggaran ini sudah ditindak sebelumnya.")
 
-    # c. Ubah status dan commit
-    log.status = ViolationStatus.SUDAH_DITINDAK
-    db.commit()
-    db.refresh(log)
+    # Update data menggunakan service
+    updated_log = violation_log_service.validate_violation(db, violation_id, payload)
 
-    # d. Format pesan teks
-    area = log.camera.area_name if log.camera else "Tidak diketahui"
-    label = log.violation_type.label_name if log.violation_type else "Tidak diketahui"
-    waktu = log.created_at.strftime("%d %b %Y %H:%M") if log.created_at else "Waktu tidak diketahui"
+    # Format pesan teks WA
+    area = updated_log.camera.area_name if updated_log.camera else "Tidak diketahui"
+    label = updated_log.violation_type.label_name if updated_log.violation_type else "Tidak diketahui"
+    waktu = updated_log.created_at.strftime("%d %b %Y %H:%M") if updated_log.created_at else "Waktu tidak diketahui"
     
     pesan = (
         f"🚨 *PERINGATAN K3!*\n\n"
@@ -288,11 +285,12 @@ def validate_violation(
         f"• *Jenis*: {label}\n"
         f"• *Lokasi*: {area}\n"
         f"• *Waktu*: {waktu}\n"
+        f"• *Pelanggar*: {payload.violator_name} ({payload.violator_nip})\n"
         f"• *ID Log*: #{violation_id}\n\n"
-        f"Mohon tim terkait segera menindaklanjuti di lapangan."
+        f"Status: Sudah Ditindak."
     )
 
-    # e. Panggil pengiriman pesan WA menggunakan BackgroundTasks
+    # Panggil pengiriman pesan WA menggunakan BackgroundTasks
     background_tasks.add_task(send_whatsapp_group_message, pesan)
 
-    return log
+    return updated_log

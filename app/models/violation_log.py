@@ -60,6 +60,16 @@ class ViolationLog(Base):
         index=True,
         comment="Status penanganan pelanggaran"
     )
+    violator_name = Column(
+        String(255),
+        nullable=True,
+        comment="Nama pekerja yang melanggar (diisi saat validasi)"
+    )
+    violator_nip = Column(
+        String(100),
+        nullable=True,
+        comment="NIP / ID Karyawan pekerja yang melanggar (diisi saat validasi)"
+    )
 
     # Relasi
     camera = relationship("Camera", back_populates="violation_logs")

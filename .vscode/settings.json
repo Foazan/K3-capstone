@@ -1,0 +1,10 @@
+{
+  "python.analysis.extraPaths": [
+    "./ai_worker/venv/Lib/site-packages",
+    "./venv/Lib/site-packages"
+  ],
+  "python.autoComplete.extraPaths": [
+    "./ai_worker/venv/Lib/site-packages",
+    "./venv/Lib/site-packages"
+  ]
+}

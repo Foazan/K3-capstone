@@ -2,7 +2,8 @@
 from datetime import datetime
 from typing import List, Optional
 
-from pydantic import BaseModel, Field
+import os
+from pydantic import BaseModel, Field, field_validator
 
 from app.models.violation_log import ViolationStatus
 
@@ -69,6 +70,12 @@ class ViolationStatusBulkUpdate(BaseModel):
     )
 
 
+class ViolationValidate(BaseModel):
+    """Schema untuk PATCH /api/violations/{id}/validate"""
+    violator_name: str = Field(..., description="Nama pekerja yang melanggar", examples=["Budi Santoso"])
+    violator_nip: str = Field(..., description="NIP / ID Karyawan", examples=["EMP12345"])
+
+
 # --- Read (Response) ---
 class ViolationLogRead(BaseModel):
     """Respons log pelanggaran dengan data JOIN kamera dan jenis pelanggaran."""
@@ -78,10 +85,20 @@ class ViolationLogRead(BaseModel):
     image_path: Optional[str]
     created_at: datetime
     status: ViolationStatus
+    violator_name: Optional[str] = None
+    violator_nip: Optional[str] = None
 
     # JOIN data
     camera: Optional[CameraInfo] = None
     violation_type: Optional[ViolationTypeInfo] = None
+
+    @field_validator("image_path")
+    @classmethod
+    def format_image_url(cls, v: Optional[str]) -> Optional[str]:
+        if v and not v.startswith("http"):
+            filename = os.path.basename(v)
+            return f"http://localhost:8000/snapshots/{filename}"
+        return v
 
     model_config = {"from_attributes": True}
 
