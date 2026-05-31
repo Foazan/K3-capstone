@@ -4,6 +4,8 @@ import requests
 import threading
 from ultralytics import YOLO
 import logging
+from flask import Flask, Response
+from flask_cors import CORS
 
 # Setup logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -19,6 +21,12 @@ CONFIDENCE_THRESHOLD = 0.6
 COOLDOWN_SECONDS = 30 # Waktu jeda (detik) per kelas pelanggaran
 
 # ==========================================
+# FLASK INIT
+# ==========================================
+app = Flask(__name__)
+CORS(app)  # Tambahkan CORS agar React (port 5173/5174) bisa mengakses stream ini
+
+# ==========================================
 # INITIALIZATION
 # ==========================================
 try:
@@ -32,6 +40,16 @@ try:
     print("[INFO] Kamus Kelas dari YOLO:", CLASS_NAMES)
 except Exception as e:
     logging.error(f"Gagal memuat model YOLO: {e}")
+    exit(1)
+
+# Inisialisasi Kamera Global dengan cv2.CAP_DSHOW untuk Windows
+if isinstance(CAMERA_SOURCE, int) or str(CAMERA_SOURCE).isdigit():
+    cap = cv2.VideoCapture(int(CAMERA_SOURCE), cv2.CAP_DSHOW)
+else:
+    cap = cv2.VideoCapture(CAMERA_SOURCE)
+
+if not cap.isOpened():
+    logging.error(f"Gagal membuka sumber kamera: {CAMERA_SOURCE}")
     exit(1)
 
 # Daftar ID kelas yang dianggap sebagai pelanggaran
@@ -87,15 +105,13 @@ def send_alert_background(class_id, frame):
     except Exception as e:
         logging.error(f"[UNKNOWN ERROR] Terjadi kesalahan saat mengirim data: {e}")
 
-def main():
-    # Buka stream kamera
-    cap = cv2.VideoCapture(CAMERA_SOURCE)
-    
-    if not cap.isOpened():
-        logging.error(f"Gagal membuka sumber kamera: {CAMERA_SOURCE}")
-        return
+def generate_frames():
+    """
+    Fungsi generator untuk membaca frame dari kamera, menjalankan YOLO, dan me-return sebagai stream MJPEG.
+    """
+    global cap
         
-    logging.info("Memulai deteksi... Tekan 'q' untuk keluar.")
+    logging.info("Memulai deteksi MJPEG Stream...")
     
     while True:
         ret, frame = cap.read()
@@ -146,18 +162,25 @@ def main():
                         # Kirim ke backend API menggunakan background thread agar video stream tidak freeze
                         threading.Thread(target=send_alert_background, args=(class_id, labeled_frame)).start()
         
-        # Opsional: Tampilkan hasil deteksi di layar
+        # Plot hasil inferensi di frame untuk ditampilkan di frontend
         annotated_frame = results[0].plot()
-        cv2.imshow("K3 Monitoring YOLO", annotated_frame)
         
-        # Keluar jika tombol 'q' ditekan
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            logging.info("Menghentikan sistem...")
-            break
+        # Encode frame OpenCV menjadi JPEG
+        ret, buffer = cv2.imencode('.jpg', annotated_frame)
+        if not ret:
+            continue
             
-    # Bersihkan resource
-    cap.release()
-    cv2.destroyAllWindows()
+        frame_bytes = buffer.tobytes()
+        
+        # Yield dalam format multipart HTTP MJPEG
+        yield (b'--frame\r\n'
+               b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
+               
+@app.route('/video_feed')
+def video_feed():
+    return Response(generate_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 if __name__ == "__main__":
-    main()
+    # Jalankan server Flask di port 5000
+    logging.info("Memulai server Flask di http://0.0.0.0:5000")
+    app.run(host="0.0.0.0", port=5000, threaded=True)
