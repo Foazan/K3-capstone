@@ -1,7 +1,31 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 
 export default function FilterBar({ periode, lokasi, jenis, onPeriodeChange, onLokasiChange, onJenisChange, violationsData = [] }) {
-  const uniqueLocations = [...new Set(violationsData.map(v => v.lokasi))].filter(Boolean);
+  const [cameras, setCameras] = useState([]);
+
+  useEffect(() => {
+    const fetchCameras = async () => {
+      try {
+        const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:8000";
+        const token = localStorage.getItem("token") || "";
+        const response = await fetch(`${apiUrl}/api/camera`, {
+          headers: { "Authorization": `Bearer ${token}` }
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data.items) {
+            setCameras(data.items);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching cameras:", error);
+      }
+    };
+
+    fetchCameras();
+  }, []);
+
   return (
     <div className="filter-bar">
       <div className="filter-group">
@@ -18,8 +42,8 @@ export default function FilterBar({ periode, lokasi, jenis, onPeriodeChange, onL
         <span className="filter-label">Filter Lokasi</span>
         <select className="filter-select" value={lokasi} onChange={e => onLokasiChange(e.target.value)}>
           <option value="semua">Semua Area</option>
-          {uniqueLocations.map(loc => (
-            <option key={loc} value={loc}>{loc}</option>
+          {cameras.map(item => (
+            <option key={item.id} value={item.area_name}>{item.area_name}</option>
           ))}
         </select>
       </div>

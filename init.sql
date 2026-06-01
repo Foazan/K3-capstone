@@ -83,6 +83,8 @@ CREATE TABLE `violation_log` (
   `image_path` varchar(500) DEFAULT NULL COMMENT 'Path/URL foto bukti pelanggaran',
   `created_at` datetime NOT NULL DEFAULT current_timestamp() COMMENT 'Waktu deteksi pelanggaran',
   `status` enum('Belum Ditindak','Sudah Ditindak') NOT NULL DEFAULT 'Belum Ditindak',
+  `violator_name` varchar(255) DEFAULT NULL COMMENT 'Nama pekerja yang melanggar',
+  `violator_nip` varchar(100) DEFAULT NULL COMMENT 'NIP atau ID Karyawan',
   PRIMARY KEY (`id`),
   KEY `ix_violation_log_violation_type_id` (`violation_type_id`),
   KEY `ix_violation_log_camera_id` (`camera_id`),

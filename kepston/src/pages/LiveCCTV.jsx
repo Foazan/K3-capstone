@@ -38,7 +38,7 @@ function LiveCCTV() {
                 
                 {/* Image Stream */}
                 <img 
-                  src={streamStatus === 'error' ? '' : "http://localhost:5000/video_feed"}
+                  src={streamStatus === 'error' ? '' : (import.meta.env.VITE_STREAM_URL || "http://localhost:5000/video_feed")}
                   alt="Live CCTV"
                   style={{ 
                     width: '100%', 

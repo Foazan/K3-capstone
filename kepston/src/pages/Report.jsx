@@ -22,7 +22,13 @@ export default function Report() {
   React.useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch("http://localhost:8000/api/violations/");
+        const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:8000";
+        const token = localStorage.getItem("token") || "";
+        const response = await fetch(`${apiUrl}/api/violations/`, {
+          headers: {
+            "Authorization": `Bearer ${token}`
+          }
+        });
         const result = await response.json();
         const fetchedData = result.items || [];
         

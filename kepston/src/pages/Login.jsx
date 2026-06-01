@@ -8,13 +8,37 @@ export default function Login() {
     password: "",
   });
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (form.username && form.password) {
-      localStorage.setItem("isLoggedIn", "true");
-      localStorage.setItem("name", form.username);
-      navigate("/");
+      try {
+        const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:8000";
+        const formData = new URLSearchParams();
+        formData.append("username", form.username);
+        formData.append("password", form.password);
+
+        const response = await fetch(`${apiUrl}/api/auth/login`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+          body: formData,
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          localStorage.setItem("token", data.access_token);
+          localStorage.setItem("isLoggedIn", "true");
+          localStorage.setItem("name", form.username);
+          navigate("/");
+        } else {
+          alert("Login gagal. Periksa username dan password Anda.");
+        }
+      } catch (error) {
+        console.error("Login error:", error);
+        alert("Terjadi kesalahan saat menghubungi server.");
+      }
     }
   };
 

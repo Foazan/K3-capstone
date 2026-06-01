@@ -27,6 +27,7 @@ export default function Sidebar({ activePage, setActivePage }) {
   };
 
   const handleLogout = () => {
+    localStorage.removeItem('token');
     localStorage.removeItem('isLoggedIn');
     navigate('/login');
   };

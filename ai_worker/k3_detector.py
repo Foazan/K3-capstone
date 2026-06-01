@@ -13,7 +13,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 # ==========================================
 # CONFIGURATION
 # ==========================================
-MODEL_PATH = "weights/best.pt"
+MODEL_PATH = "ai_worker/weights/best.pt"
 CAMERA_SOURCE = 0 # Ubah ke URL RTSP (misal: "rtsp://username:password@ip:port/stream") jika menggunakan CCTV
 API_ENDPOINT = "http://localhost:8000/api/violations/detect"
 CAMERA_ID = 1
@@ -77,9 +77,19 @@ def send_alert_background(class_id, frame):
             return
 
         image_bytes = buffer.tobytes()
+        
+        # Mapping ID class YOLO ke ID master data database (yolo_class_id di DB)
+        # 1 (no-helmet) -> 0 (Tidak Pakai Helm)
+        # 2 (no-vest)   -> 1 (Tidak Pakai Rompi)
+        db_class_mapping = {
+            1: 0,
+            2: 1
+        }
+        mapped_class_id = db_class_mapping.get(class_id, class_id)
+
         # Payload form-data
         data = {
-            "yolo_class_id": class_id,
+            "yolo_class_id": mapped_class_id,
             "camera_id": CAMERA_ID
         }
         
