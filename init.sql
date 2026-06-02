@@ -130,7 +130,7 @@ CREATE TABLE `violation_type` (
 
 LOCK TABLES `violation_type` WRITE;
 /*!40000 ALTER TABLE `violation_type` DISABLE KEYS */;
-INSERT INTO `violation_type` VALUES (1,0,'Tidak Pakai Helm',3),(2,1,'Tidak Pakai Rompi',2),(3,2,'Tidak Pakai Sarung Tangan',1);
+INSERT INTO `violation_type` VALUES (1,1,'Tidak Pakai Helm',3),(2,0,'Tidak Pakai Rompi',2),(3,2,'Tidak Pakai Sarung Tangan',1);
 /*!40000 ALTER TABLE `violation_type` ENABLE KEYS */;
 UNLOCK TABLES;
 

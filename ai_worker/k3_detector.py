@@ -79,11 +79,11 @@ def send_alert_background(class_id, frame):
         image_bytes = buffer.tobytes()
         
         # Mapping ID class YOLO ke ID master data database (yolo_class_id di DB)
-        # 1 (no-helmet) -> 0 (Tidak Pakai Helm)
-        # 2 (no-vest)   -> 1 (Tidak Pakai Rompi)
+        # 1 (no-helmet) -> yolo_class_id 1 (Tidak Pakai Helm)
+        # 2 (no-vest)   -> yolo_class_id 0 (Tidak Pakai Rompi)
         db_class_mapping = {
-            1: 0,
-            2: 1
+            1: 1,
+            2: 0
         }
         mapped_class_id = db_class_mapping.get(class_id, class_id)
 
