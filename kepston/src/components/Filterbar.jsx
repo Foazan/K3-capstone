@@ -6,7 +6,7 @@ export default function FilterBar({ periode, lokasi, jenis, onPeriodeChange, onL
   useEffect(() => {
     const fetchCameras = async () => {
       try {
-        const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:8000";
+        const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:8090";
         const token = localStorage.getItem("token") || "";
         const response = await fetch(`${apiUrl}/api/camera`, {
           headers: { "Authorization": `Bearer ${token}` }
@@ -54,6 +54,8 @@ export default function FilterBar({ periode, lokasi, jenis, onPeriodeChange, onL
           <option value="semua">Semua</option>
           <option value="helm">Tidak Pakai Helm</option>
           <option value="rompi">Tidak Pakai Rompi</option>
+          <option value="sarung_tangan">Tidak Pakai Sarung Tangan</option>
+          <option value="sepatu">Tidak Pakai Sepatu</option>
         </select>
       </div>
     </div>

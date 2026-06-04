@@ -22,7 +22,7 @@ export default function Report() {
   React.useEffect(() => {
     const fetchData = async () => {
       try {
-        const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:8000";
+        const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:8090";
         const token = localStorage.getItem("token") || "";
         const response = await fetch(`${apiUrl}/api/violations/`, {
           headers: {
@@ -40,7 +40,7 @@ export default function Report() {
           let imgPath = item.image_path;
           if (imgPath && !imgPath.startsWith('http')) {
              if (!imgPath.startsWith('/')) imgPath = '/' + imgPath;
-             imgPath = `http://localhost:8000${imgPath}`;
+             imgPath = `http://localhost:8090${imgPath}`;
           }
 
           return {

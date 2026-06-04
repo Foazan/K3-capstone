@@ -17,7 +17,7 @@ function Dashboard() {
   useEffect(() => {
     const fetchViolations = async () => {
       try {
-        const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:8000";
+        const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:8090";
         const token = localStorage.getItem("token") || ""; 
         
         const response = await fetch(`${apiUrl}/api/violations?page_size=100`, {
@@ -62,7 +62,9 @@ function Dashboard() {
     if (jenis !== 'semua') {
       const matchHelm = jenis === 'helm' && item.jenis.toLowerCase().includes('helm');
       const matchRompi = jenis === 'rompi' && item.jenis.toLowerCase().includes('rompi');
-      if (!matchHelm && !matchRompi) return false;
+      const matchSarungTangan = jenis === 'sarung_tangan' && item.jenis.toLowerCase().includes('sarung tangan');
+      const matchSepatu = jenis === 'sepatu' && item.jenis.toLowerCase().includes('sepatu');
+      if (!matchHelm && !matchRompi && !matchSarungTangan && !matchSepatu) return false;
     }
 
     // Filter Lokasi
@@ -91,6 +93,8 @@ function Dashboard() {
   const totalFiltered = filteredViolations.length;
   const helmFiltered = filteredViolations.filter(v => v.jenis.toLowerCase().includes('helm')).length;
   const rompiFiltered = filteredViolations.filter(v => v.jenis.toLowerCase().includes('rompi')).length;
+  const sarungTanganFiltered = filteredViolations.filter(v => v.jenis.toLowerCase().includes('sarung tangan')).length;
+  const sepatuFiltered = filteredViolations.filter(v => v.jenis.toLowerCase().includes('sepatu')).length;
   
   // Logic placeholder untuk Compliance Rate
   // Misalnya default 100%, kurangi 2% untuk tiap pelanggaran
@@ -117,16 +121,22 @@ function Dashboard() {
 
           {/* Cards */}
           <div className="row mb-4">
-            <div className="col-md-3 mb-3 mb-md-0">
+            <div className="col-md-4 mb-3">
               <StartCard title="Total Pelanggaran" value={totalFiltered} icon="⚠️" />
             </div>
-            <div className="col-md-3 mb-3 mb-md-0">
+            <div className="col-md-4 mb-3">
               <StartCard title="Tidak Pakai Helm" value={helmFiltered} icon="⛑️" />
             </div>
-            <div className="col-md-3 mb-3 mb-md-0">
+            <div className="col-md-4 mb-3">
               <StartCard title="Tidak Pakai Rompi" value={rompiFiltered} icon="🦺" />
             </div>
-            <div className="col-md-3 mb-3 mb-md-0">
+            <div className="col-md-4 mb-3">
+              <StartCard title="Tidak Pakai Sarung Tangan" value={sarungTanganFiltered} icon="🧤" />
+            </div>
+            <div className="col-md-4 mb-3">
+              <StartCard title="Tidak Pakai Sepatu" value={sepatuFiltered} icon="🥾" />
+            </div>
+            <div className="col-md-4 mb-3">
               <StartCard title="Compliance Rate" value={complianceRate} icon="👷‍♂️✅" />
             </div>
           </div>

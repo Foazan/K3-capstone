@@ -4,29 +4,35 @@ import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 export default function DonutChart({ data = [] }) {
   let rompiCount = 0;
   let helmCount = 0;
+  let sarungTanganCount = 0;
+  let sepatuCount = 0;
   
   if (data && data.length > 0) {
     rompiCount = data.filter(d => d.jenis.toLowerCase().includes('rompi')).length;
     helmCount = data.filter(d => d.jenis.toLowerCase().includes('helm')).length;
+    sarungTanganCount = data.filter(d => d.jenis.toLowerCase().includes('sarung tangan')).length;
+    sepatuCount = data.filter(d => d.jenis.toLowerCase().includes('sepatu')).length;
   }
   
   // Format hasil perhitungan menjadi array of objects untuk Recharts
   const chartData = [
     { name: 'Tidak Pakai Rompi', value: Number(rompiCount) },
-    { name: 'Tidak Pakai Helm', value: Number(helmCount) }
+    { name: 'Tidak Pakai Helm', value: Number(helmCount) },
+    { name: 'Tidak Pakai Sarung Tangan', value: Number(sarungTanganCount) },
+    { name: 'Tidak Pakai Sepatu', value: Number(sepatuCount) }
   ];
 
-  const total = rompiCount + helmCount;
+  const total = rompiCount + helmCount + sarungTanganCount + sepatuCount;
   
   // Jika data 0, tampilkan default abu-abu agar chart tetap ter-render
   const displayData = total === 0 ? [{ name: 'Belum Ada Pelanggaran', value: 1 }] : chartData;
-  const COLORS = total === 0 ? ['#e5e7eb'] : ['#f87171', '#3b82f6'];
+  const COLORS = total === 0 ? ['#e5e7eb'] : ['#f87171', '#3b82f6', '#fbbf24', '#34d399'];
 
   return (
     <div className="chart-card h-100">
       <div className="d-flex justify-content-between align-items-center mb-2">
         <span className="card-title">Jenis Pelanggaran</span>
-        <div className="d-flex gap-3">
+        <div className="d-flex gap-3 flex-wrap">
           <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: '#6b7280' }}>
             <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#f87171', display: 'inline-block' }}></span>
             Rompi
@@ -34,6 +40,14 @@ export default function DonutChart({ data = [] }) {
           <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: '#6b7280' }}>
             <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#3b82f6', display: 'inline-block' }}></span>
             Helm
+          </span>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: '#6b7280' }}>
+            <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#fbbf24', display: 'inline-block' }}></span>
+            Sarung Tangan
+          </span>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: '#6b7280' }}>
+            <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#34d399', display: 'inline-block' }}></span>
+            Sepatu
           </span>
         </div>
       </div>
@@ -74,14 +88,22 @@ export default function DonutChart({ data = [] }) {
         </div>
 
         {/* Legend / Angka Samping */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <div style={{ background: '#fef2f2', borderRadius: 10, padding: '10px 16px', minWidth: 120 }}>
-            <div style={{ fontSize: 11, color: '#f87171', fontWeight: 700, marginBottom: 2 }}>🦺 Tidak Pakai Rompi</div>
-            <div style={{ fontSize: 22, fontWeight: 800, color: '#111', fontFamily: "'JetBrains Mono', monospace" }}>{rompiCount}</div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+          <div style={{ background: '#fef2f2', borderRadius: 8, padding: '8px 12px', minWidth: 90 }}>
+            <div style={{ fontSize: 10, color: '#f87171', fontWeight: 700, marginBottom: 2, whiteSpace: 'nowrap' }}>🦺 Rompi</div>
+            <div style={{ fontSize: 18, fontWeight: 800, color: '#111', fontFamily: "'JetBrains Mono', monospace" }}>{rompiCount}</div>
           </div>
-          <div style={{ background: '#eff6ff', borderRadius: 10, padding: '10px 16px', minWidth: 120 }}>
-            <div style={{ fontSize: 11, color: '#3b82f6', fontWeight: 700, marginBottom: 2 }}>⛑️ Tidak Pakai Helm</div>
-            <div style={{ fontSize: 22, fontWeight: 800, color: '#111', fontFamily: "'JetBrains Mono', monospace" }}>{helmCount}</div>
+          <div style={{ background: '#eff6ff', borderRadius: 8, padding: '8px 12px', minWidth: 90 }}>
+            <div style={{ fontSize: 10, color: '#3b82f6', fontWeight: 700, marginBottom: 2, whiteSpace: 'nowrap' }}>⛑️ Helm</div>
+            <div style={{ fontSize: 18, fontWeight: 800, color: '#111', fontFamily: "'JetBrains Mono', monospace" }}>{helmCount}</div>
+          </div>
+          <div style={{ background: '#fffbeb', borderRadius: 8, padding: '8px 12px', minWidth: 90 }}>
+            <div style={{ fontSize: 10, color: '#d97706', fontWeight: 700, marginBottom: 2, whiteSpace: 'nowrap' }}>🧤 Sarung Tangan</div>
+            <div style={{ fontSize: 18, fontWeight: 800, color: '#111', fontFamily: "'JetBrains Mono', monospace" }}>{sarungTanganCount}</div>
+          </div>
+          <div style={{ background: '#ecfdf5', borderRadius: 8, padding: '8px 12px', minWidth: 90 }}>
+            <div style={{ fontSize: 10, color: '#059669', fontWeight: 700, marginBottom: 2, whiteSpace: 'nowrap' }}>🥾 Sepatu</div>
+            <div style={{ fontSize: 18, fontWeight: 800, color: '#111', fontFamily: "'JetBrains Mono', monospace" }}>{sepatuCount}</div>
           </div>
         </div>
       </div>

@@ -97,7 +97,7 @@ class ViolationLogRead(BaseModel):
     def format_image_url(cls, v: Optional[str]) -> Optional[str]:
         if v and not v.startswith("http"):
             filename = os.path.basename(v)
-            return f"http://localhost:8000/snapshots/{filename}"
+            return f"http://localhost:8090/snapshots/{filename}"
         return v
 
     model_config = {"from_attributes": True}

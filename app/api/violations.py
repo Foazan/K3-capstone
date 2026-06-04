@@ -55,7 +55,7 @@ async def detect_violation(
     """
     Contoh curl dari ESP32-CAM:
     ```bash
-    curl -X POST http://server:8000/api/violations/detect \\
+    curl -X POST http://server:8090/api/violations/detect \\
       -F camera_id=1 \\
       -F violation_type_id=2 \\
       -F image=@/path/to/frame.jpg

@@ -8,7 +8,7 @@ const GlobalNotification = () => {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:8000";
+        const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:8090";
         const token = localStorage.getItem("token") || ""; 
         if (!token) return; // Only run if user is logged in
 

@@ -1,3 +1,4 @@
+import os
 import cv2
 import time
 import requests
@@ -6,6 +7,8 @@ from ultralytics import YOLO
 import logging
 from flask import Flask, Response
 from flask_cors import CORS
+import urllib.request
+import numpy as np
 
 # Setup logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -14,8 +17,8 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 # CONFIGURATION
 # ==========================================
 MODEL_PATH = "ai_worker/weights/best2.pt"
-CAMERA_SOURCE = 0 # Ubah ke URL RTSP (misal: "rtsp://username:password@ip:port/stream") jika menggunakan CCTV
-API_ENDPOINT = "http://localhost:8000/api/violations/detect"
+CAMERA_SOURCE = "http://10.234.177.47:81/stream"
+API_ENDPOINT = "http://localhost:8090/api/violations/detect"
 CAMERA_ID = 1
 CONFIDENCE_THRESHOLD = 0.6
 COOLDOWN_SECONDS = 30 # Waktu jeda (detik) per kelas pelanggaran
@@ -42,14 +45,30 @@ except Exception as e:
     logging.error(f"Gagal memuat model YOLO: {e}")
     exit(1)
 
-# Inisialisasi Kamera Global dengan cv2.CAP_DSHOW untuk Windows
-if isinstance(CAMERA_SOURCE, int) or str(CAMERA_SOURCE).isdigit():
-    cap = cv2.VideoCapture(int(CAMERA_SOURCE), cv2.CAP_DSHOW)
-else:
-    cap = cv2.VideoCapture(CAMERA_SOURCE)
+# Inisialisasi Kamera Global dengan urllib
+stream = None
+max_retries = 3
+retry_count = 0
 
-if not cap.isOpened():
-    logging.error(f"Gagal membuka sumber kamera: {CAMERA_SOURCE}")
+while retry_count < max_retries:
+    try:
+        if isinstance(CAMERA_SOURCE, int) or str(CAMERA_SOURCE).isdigit():
+            stream = cv2.VideoCapture(int(CAMERA_SOURCE), cv2.CAP_DSHOW)
+            if stream.isOpened():
+                logging.info(f"Berhasil terhubung ke kamera lokal: {CAMERA_SOURCE}")
+                break
+        else:
+            # Menggunakan urllib untuk membaca stream MJPEG
+            stream = urllib.request.urlopen(CAMERA_SOURCE, timeout=10)
+            logging.info(f"Berhasil terhubung ke stream HTTP: {CAMERA_SOURCE}")
+            break
+    except Exception as e:
+        retry_count += 1
+        logging.warning(f"Gagal membuka sumber kamera. Percobaan {retry_count} dari {max_retries}. Error: {e}. Menunggu 2 detik...")
+        time.sleep(2)
+
+if stream is None or (isinstance(stream, cv2.VideoCapture) and not stream.isOpened()):
+    logging.error(f"Gagal membuka sumber kamera {CAMERA_SOURCE} setelah {max_retries} percobaan. Keluar...")
     exit(1)
 
 # Dictionary mapping untuk menerjemahkan ID YOLO menjadi ID Database
@@ -122,15 +141,34 @@ def generate_frames():
     """
     Fungsi generator untuk membaca frame dari kamera, menjalankan YOLO, dan me-return sebagai stream MJPEG.
     """
-    global cap
+    global stream
         
     logging.info("Memulai deteksi MJPEG Stream...")
     
+    bytes_data = b''
+    
     while True:
-        ret, frame = cap.read()
-        if not ret:
-            logging.error("Gagal membaca frame dari kamera. Menutup stream...")
-            break
+        frame = None
+        if isinstance(stream, cv2.VideoCapture):
+            ret, frame = stream.read()
+            if not ret:
+                logging.error("Gagal membaca frame dari kamera lokal. Menutup stream...")
+                break
+        else:
+            try:
+                bytes_data += stream.read(1024)
+                a = bytes_data.find(b'\xff\xd8')
+                b = bytes_data.find(b'\xff\xd9')
+                if a != -1 and b != -1:
+                    jpg = bytes_data[a:b+2]
+                    bytes_data = bytes_data[b+2:]
+                    frame = cv2.imdecode(np.frombuffer(jpg, dtype=np.uint8), cv2.IMREAD_COLOR)
+            except Exception as e:
+                logging.error(f"Error membaca dari stream HTTP: {e}")
+                break
+                
+        if frame is None:
+            continue
             
         # Jalankan inferensi YOLO
         # verbose=False agar terminal tidak terlalu penuh dengan log YOLO tiap frame
