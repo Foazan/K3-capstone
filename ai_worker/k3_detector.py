@@ -13,7 +13,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 # ==========================================
 # CONFIGURATION
 # ==========================================
-MODEL_PATH = "ai_worker/weights/best.pt"
+MODEL_PATH = "ai_worker/weights/best2.pt"
 CAMERA_SOURCE = 0 # Ubah ke URL RTSP (misal: "rtsp://username:password@ip:port/stream") jika menggunakan CCTV
 API_ENDPOINT = "http://localhost:8000/api/violations/detect"
 CAMERA_ID = 1
@@ -52,13 +52,20 @@ if not cap.isOpened():
     logging.error(f"Gagal membuka sumber kamera: {CAMERA_SOURCE}")
     exit(1)
 
-# Daftar ID kelas yang dianggap sebagai pelanggaran
-VIOLATION_CLASS_IDS = [1, 2]
+# Dictionary mapping untuk menerjemahkan ID YOLO menjadi ID Database
+DB_ID_MAPPING = {
+    7: 0,  # 'No_Harness' -> Tidak Pakai Rompi
+    8: 1,  # 'No_Helmet' -> Tidak Pakai Helm
+    5: 2,  # 'No_Glove' -> Tidak Pakai Sarung Tangan
+    12: 3  # 'no boots' -> Tidak Pakai Sepatu
+}
 
-# Dictionary terjemahan kelas untuk tampilan (berdasarkan ID kelas)
+# Dictionary terjemahan kelas untuk tampilan (berdasarkan ID kelas YOLO)
 TRANSLATIONS = {
-    1: "Tidak Pakai Helm",
-    2: "Tidak Pakai Rompi"
+    7: "Tidak Pakai Rompi",
+    8: "Tidak Pakai Helm",
+    5: "Tidak Pakai Sarung Tangan",
+    12: "Tidak Pakai Sepatu"
 }
 
 # Menyimpan waktu deteksi terakhir untuk sistem cooldown
@@ -78,14 +85,10 @@ def send_alert_background(class_id, frame):
 
         image_bytes = buffer.tobytes()
         
-        # Mapping ID class YOLO ke ID master data database (yolo_class_id di DB)
-        # 1 (no-helmet) -> yolo_class_id 1 (Tidak Pakai Helm)
-        # 2 (no-vest)   -> yolo_class_id 0 (Tidak Pakai Rompi)
-        db_class_mapping = {
-            1: 1,
-            2: 0
-        }
-        mapped_class_id = db_class_mapping.get(class_id, class_id)
+        # Terjemahkan ID YOLO menjadi ID Database menggunakan mapping
+        mapped_class_id = DB_ID_MAPPING.get(class_id)
+        if mapped_class_id is None:
+            return
 
         # Payload form-data
         data = {
@@ -140,27 +143,24 @@ def generate_frames():
                 class_id = int(box.cls[0].item())
                 confidence = float(box.conf[0].item())
                 
-                # Filter: Jika bukan kelas pelanggaran, abaikan sepenuhnya
-                if class_id not in VIOLATION_CLASS_IDS:
+                # Cek apakah ID kelas YOLO ada dalam DB_ID_MAPPING
+                if class_id not in DB_ID_MAPPING:
                     continue
                 
                 # Cek apakah kelas terdeteksi ada di dalam kamus kelas model
                 if class_id in CLASS_NAMES:
+                    violation_id = DB_ID_MAPPING.get(class_id)
                     current_time = time.time()
                     
-                    # Logika Cooldown
-                    if class_id not in last_alert_time:
-                        last_alert_time[class_id] = 0.0
-                        
-                    time_since_last = current_time - last_alert_time[class_id]
-                    if time_since_last >= COOLDOWN_SECONDS:
+                    # Cek apakah violation_id sudah lewat masa cooldown
+                    if violation_id not in last_alert_time or (current_time - last_alert_time[violation_id] > COOLDOWN_SECONDS):
                         class_name_raw = CLASS_NAMES[class_id]
                         class_name_translated = TRANSLATIONS.get(class_id, class_name_raw)
                         
                         logging.info(f"[ALERT] Pelanggaran Terdeteksi: {class_name_translated} | Confidence: {confidence:.2f}")
                         
                         # Update waktu deteksi TERLEBIH DAHULU agar tidak spam jika proses API lambat
-                        last_alert_time[class_id] = current_time
+                        last_alert_time[violation_id] = current_time
                         
                         # Menggambar bounding box khusus untuk gambar yang akan dikirim sebagai bukti
                         x1, y1, x2, y2 = map(int, box.xyxy[0])
@@ -171,6 +171,8 @@ def generate_frames():
                         
                         # Kirim ke backend API menggunakan background thread agar video stream tidak freeze
                         threading.Thread(target=send_alert_background, args=(class_id, labeled_frame)).start()
+                    else:
+                        continue
         
         # Plot hasil inferensi di frame untuk ditampilkan di frontend
         annotated_frame = results[0].plot()

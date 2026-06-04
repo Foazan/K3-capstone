@@ -27,6 +27,7 @@ function Dashboard() {
         if (!response.ok) return;
 
         const result = await response.json();
+
         const formattedData = result.items.map(item => {
           let dateStr = item.created_at;
           if (!dateStr.endsWith("Z") && !dateStr.includes("+")) {

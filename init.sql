@@ -121,7 +121,7 @@ CREATE TABLE `violation_type` (
   UNIQUE KEY `ix_violation_type_label_name` (`label_name`),
   UNIQUE KEY `ix_violation_type_yolo_class_id` (`yolo_class_id`),
   KEY `ix_violation_type_id` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -130,7 +130,7 @@ CREATE TABLE `violation_type` (
 
 LOCK TABLES `violation_type` WRITE;
 /*!40000 ALTER TABLE `violation_type` DISABLE KEYS */;
-INSERT INTO `violation_type` VALUES (1,1,'Tidak Pakai Helm',3),(2,0,'Tidak Pakai Rompi',2),(3,2,'Tidak Pakai Sarung Tangan',1);
+INSERT INTO `violation_type` VALUES (1,1,'Tidak Pakai Helm',3),(2,0,'Tidak Pakai Rompi',2),(3,2,'Tidak Pakai Sarung Tangan',1),(4,3,'Tidak Pakai Sepatu',1);
 /*!40000 ALTER TABLE `violation_type` ENABLE KEYS */;
 UNLOCK TABLES;
 
