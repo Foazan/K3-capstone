@@ -30,8 +30,8 @@ export default function Register() {
     }
 
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:8090";
-      const response = await fetch(`${apiUrl}/api/auth/register`, {
+      const apiUrl = import.meta.env.VITE_API_FASTAPI || "http://localhost:8090";
+      const response = await fetch(`${apiUrl}/api/auth/register/`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

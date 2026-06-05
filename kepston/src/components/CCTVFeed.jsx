@@ -34,7 +34,7 @@ export default function CCTVFeed({ label, hasAlert, alertMessage, streamUrl, cam
     
     setIsUpdating(true);
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:8090";
+      const apiUrl = import.meta.env.VITE_API_FASTAPI || "http://localhost:8090";
       const token = localStorage.getItem("token") || ""; 
       
       const payload = { 
@@ -43,7 +43,7 @@ export default function CCTVFeed({ label, hasAlert, alertMessage, streamUrl, cam
         url: inputUrl 
       };
 
-      const response = await axios.patch(`${apiUrl}/api/camera/${cameraId}`, payload, {
+      const response = await axios.patch(`${apiUrl}/api/camera/${cameraId}/`, payload, {
         headers: { 
           "Authorization": `Bearer ${token}`,
           "Content-Type": "application/json"
@@ -52,7 +52,7 @@ export default function CCTVFeed({ label, hasAlert, alertMessage, streamUrl, cam
 
       if (response.status === 200) {
         try {
-          await axios.post("http://localhost:5000/update_stream", { 
+          await axios.post(`${import.meta.env.VITE_API_FLASK}/update_stream`, { 
             url: inputUrl, 
             camera_id: cameraId 
           }, {
@@ -68,7 +68,7 @@ export default function CCTVFeed({ label, hasAlert, alertMessage, streamUrl, cam
         }
         
         if (onUpdate) onUpdate();
-        setActiveStreamUrl("http://localhost:5000/video_feed");
+        setActiveStreamUrl(`${import.meta.env.VITE_API_FLASK}/video_feed`);
         setHasError(false);
         alert("Berhasil! Kamera sedang dihubungkan.");
       }

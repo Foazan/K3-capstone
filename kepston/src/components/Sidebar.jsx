@@ -16,9 +16,9 @@ export default function Sidebar() {
   useEffect(() => {
     const fetchCameraCount = async () => {
       try {
-        const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:8090";
+        const apiUrl = import.meta.env.VITE_API_FASTAPI || "http://localhost:8090";
         const token = localStorage.getItem("token") || ""; 
-        const response = await fetch(`${apiUrl}/api/camera?status_cam=true`, {
+        const response = await fetch(`${apiUrl}/api/camera/?status_cam=true`, {
           headers: { "Authorization": `Bearer ${token}` }
         });
         if (response.ok) {

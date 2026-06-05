@@ -21,11 +21,11 @@ function Dashboard() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:8090";
+        const apiUrl = import.meta.env.VITE_API_FASTAPI || "http://localhost:8090";
         const token = localStorage.getItem("token") || "";
 
         // Fetch Violations
-        const response = await fetch(`${apiUrl}/api/violations?page_size=100`, {
+        const response = await fetch(`${apiUrl}/api/violations/?page_size=100`, {
           headers: { "Authorization": `Bearer ${token}` }
         });
 
@@ -55,7 +55,7 @@ function Dashboard() {
         }
 
         // Fetch Cameras
-        const camResponse = await fetch(`${apiUrl}/api/camera?status_cam=true`, {
+        const camResponse = await fetch(`${apiUrl}/api/camera/?status_cam=true`, {
           headers: { "Authorization": `Bearer ${token}` }
         });
 

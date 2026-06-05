@@ -8,12 +8,12 @@ const GlobalNotification = () => {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:8090";
+        const apiUrl = import.meta.env.VITE_API_FASTAPI || "http://localhost:8090";
         const token = localStorage.getItem("token") || ""; 
         if (!token) return; // Only run if user is logged in
 
         // Gunakan endpoint yang ringan dengan limit 1 untuk mengecek total data
-        const response = await fetch(`${apiUrl}/api/violations?page_size=1`, {
+        const response = await fetch(`${apiUrl}/api/violations/?page_size=1`, {
           headers: { "Authorization": `Bearer ${token}` }
         });
         

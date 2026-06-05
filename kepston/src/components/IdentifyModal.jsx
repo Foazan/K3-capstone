@@ -10,10 +10,10 @@ export default function IdentifyModal({ data, onClose, onSuccess }) {
   const handleSimpan = async () => {
     setIsLoading(true);
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:8090";
+      const apiUrl = import.meta.env.VITE_API_FASTAPI || "http://localhost:8090";
       const token = localStorage.getItem("token") || "";
 
-      const response = await fetch(`${apiUrl}/api/violations/${data.id}/validate`, {
+      const response = await fetch(`${apiUrl}/api/violations/${data.id}/validate/`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

@@ -18,7 +18,7 @@ function LiveCCTV() {
 
   const fetchPythonStatus = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/status");
+      const res = await axios.get(`${import.meta.env.VITE_API_FLASK}/status`);
       if (res.status === 200) {
         setActiveAiUrl(res.data.current_url || null);
       }
@@ -29,9 +29,9 @@ function LiveCCTV() {
 
   const fetchCameras = async () => {
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:8090";
+      const apiUrl = import.meta.env.VITE_API_FASTAPI || "http://localhost:8090";
       const token = localStorage.getItem("token") || ""; 
-      const response = await axios.get(`${apiUrl}/api/camera`, {
+      const response = await axios.get(`${apiUrl}/api/camera/`, {
         headers: { "Authorization": `Bearer ${token}` }
       });
       if (response.status === 200) {
@@ -73,7 +73,7 @@ function LiveCCTV() {
 
     setLoading(true);
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:8090";
+      const apiUrl = import.meta.env.VITE_API_FASTAPI || "http://localhost:8090";
       const token = localStorage.getItem("token") || ""; 
       
       const payload = { 
@@ -85,7 +85,7 @@ function LiveCCTV() {
       let response;
       if (editingCamera) {
         // Edit mode (PATCH)
-        response = await axios.patch(`${apiUrl}/api/camera/${editingCamera.id}`, payload, {
+        response = await axios.patch(`${apiUrl}/api/camera/${editingCamera.id}/`, payload, {
           headers: { 
             "Authorization": `Bearer ${token}`,
             "Content-Type": "application/json"
@@ -93,7 +93,7 @@ function LiveCCTV() {
         });
       } else {
         // Create mode (POST)
-        response = await axios.post(`${apiUrl}/api/camera`, payload, {
+        response = await axios.post(`${apiUrl}/api/camera/`, payload, {
           headers: { 
             "Authorization": `Bearer ${token}`,
             "Content-Type": "application/json"
@@ -108,7 +108,7 @@ function LiveCCTV() {
             ? { url: urlKamera, camera_id: editingCamera ? editingCamera.id : response.data?.id }
             : { url: "", camera_id: null };
             
-          await axios.post("http://localhost:5000/update_stream", pyPayload, {
+          await axios.post(`${import.meta.env.VITE_API_FLASK}/update_stream`, pyPayload, {
             headers: { "Content-Type": "application/json" }
           });
           
@@ -146,7 +146,7 @@ function LiveCCTV() {
       // 1 & 2. Pre-Deletion Check dan Graceful Shutdown (Kill Signal)
       if (area.status_cam === true || (area.url && area.url === activeAiUrl)) {
         try {
-          await axios.post("http://localhost:5000/update_stream", {
+          await axios.post(`${import.meta.env.VITE_API_FLASK}/update_stream`, {
             url: "",
             camera_id: null
           }, {
@@ -163,10 +163,10 @@ function LiveCCTV() {
       }
 
       // 3. Eksekusi Hapus di Backend Utama (FastAPI)
-      const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:8090";
+      const apiUrl = import.meta.env.VITE_API_FASTAPI || "http://localhost:8090";
       const token = localStorage.getItem("token") || ""; 
       
-      const response = await axios.delete(`${apiUrl}/api/camera/${id}`, {
+      const response = await axios.delete(`${apiUrl}/api/camera/${id}/`, {
         headers: { "Authorization": `Bearer ${token}` }
       });
       
@@ -231,7 +231,7 @@ function LiveCCTV() {
             ) : (
               areas.map((area, index) => {
                 const streamUrl = area.url && activeAiUrl === area.url 
-                  ? "http://localhost:5000/video_feed" 
+                  ? `${import.meta.env.VITE_API_FLASK}/video_feed` 
                   : null;
 
                 return (

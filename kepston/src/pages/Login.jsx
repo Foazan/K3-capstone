@@ -13,12 +13,12 @@ export default function Login() {
 
     if (form.username && form.password) {
       try {
-        const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:8090";
+        const apiUrl = import.meta.env.VITE_API_FASTAPI || "http://localhost:8090";
         const formData = new URLSearchParams();
         formData.append("username", form.username);
         formData.append("password", form.password);
 
-        const response = await fetch(`${apiUrl}/api/auth/login`, {
+        const response = await fetch(`${apiUrl}/api/auth/login/`, {
           method: "POST",
           headers: {
             "Content-Type": "application/x-www-form-urlencoded",

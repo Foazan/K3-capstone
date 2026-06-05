@@ -18,9 +18,9 @@ function Users() {
 
   const fetchUsers = async () => {
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:8090";
+      const apiUrl = import.meta.env.VITE_API_FASTAPI || "http://localhost:8090";
       const token = localStorage.getItem("token") || "";
-      const response = await fetch(`${apiUrl}/api/users?page_size=100`, {
+      const response = await fetch(`${apiUrl}/api/users/?page_size=100`, {
         headers: { "Authorization": `Bearer ${token}` }
       });
       if (response.ok) {
@@ -48,9 +48,9 @@ function Users() {
 
     setLoading(true);
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:8090";
+      const apiUrl = import.meta.env.VITE_API_FASTAPI || "http://localhost:8090";
       const token = localStorage.getItem("token") || "";
-      const response = await fetch(`${apiUrl}/api/users`, {
+      const response = await fetch(`${apiUrl}/api/users/`, {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${token}`,
@@ -88,7 +88,7 @@ function Users() {
 
     setLoading(true);
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:8090";
+      const apiUrl = import.meta.env.VITE_API_FASTAPI || "http://localhost:8090";
       const token = localStorage.getItem("token") || "";
       const payload = {
         username: form.username,
@@ -129,9 +129,9 @@ function Users() {
     if (!window.confirm("Yakin ingin menghapus user ini?")) return;
 
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:8090";
+      const apiUrl = import.meta.env.VITE_API_FASTAPI || "http://localhost:8090";
       const token = localStorage.getItem("token") || "";
-      const response = await fetch(`${apiUrl}/api/users/${id}`, {
+      const response = await fetch(`${apiUrl}/api/users/${id}/`, {
         method: "DELETE",
         headers: { "Authorization": `Bearer ${token}` }
       });

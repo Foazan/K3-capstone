@@ -9,9 +9,9 @@ export default function FilterBar({
   useEffect(() => {
     const fetchCameras = async () => {
       try {
-        const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:8090";
+        const apiUrl = import.meta.env.VITE_API_FASTAPI || "http://localhost:8090";
         const token = localStorage.getItem("token") || "";
-        const response = await fetch(`${apiUrl}/api/camera`, {
+        const response = await fetch(`${apiUrl}/api/camera/`, {
           headers: { "Authorization": `Bearer ${token}` }
         });
 

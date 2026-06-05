@@ -25,13 +25,13 @@ export default function Report() {
   React.useEffect(() => {
     const fetchData = async () => {
       try {
-        const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:8090";
+        const apiUrl = import.meta.env.VITE_API_FASTAPI || "http://localhost:8090";
         const token = localStorage.getItem("token") || "";
         const headers = { "Authorization": `Bearer ${token}` };
 
         // 1. Fetch data master Lokasi dari database
         try {
-          const camRes = await fetch(`${apiUrl}/api/camera`, { headers });
+          const camRes = await fetch(`${apiUrl}/api/camera/`, { headers });
           if (camRes.ok) {
             const camData = await camRes.json();
             const areas = [...new Set((camData.items || []).map(c => c.area_name))].filter(Boolean);
@@ -43,7 +43,7 @@ export default function Report() {
 
         // 2. Fetch data master Jenis Pelanggaran dari database
         try {
-          const typeRes = await fetch(`${apiUrl}/api/violation-types`, { headers });
+          const typeRes = await fetch(`${apiUrl}/api/violation-types/`, { headers });
           if (typeRes.ok) {
             const typeData = await typeRes.json();
             const types = [...new Set((typeData.items || []).map(t => t.label_name))].filter(Boolean);
@@ -54,7 +54,7 @@ export default function Report() {
         }
 
         // 3. Fetch laporan pelanggaran (ambil lebih banyak data untuk tabel agar sinkron)
-        const response = await fetch(`${apiUrl}/api/violations?page_size=100`, { headers });
+        const response = await fetch(`${apiUrl}/api/violations/?page_size=100`, { headers });
         
         if (!response.ok) {
           console.error("Gagal mengambil data laporan:", await response.text());
