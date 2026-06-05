@@ -18,6 +18,7 @@ class Camera(Base):
         nullable=False,
         comment="Status aktif kamera"
     )
+    url = Column(String(255), nullable=True, comment="URL stream kamera")
 
     # Relasi ke violation_log
     violation_logs = relationship("ViolationLog", back_populates="camera", lazy="dynamic")

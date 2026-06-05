@@ -17,7 +17,7 @@ from app.services import user_service
 router = APIRouter(prefix="/users", tags=["Manajemen User (Admin Only)"])
 
 
-@router.get("/", response_model=UserList, summary="Daftar semua user")
+@router.get("", response_model=UserList, summary="Daftar semua user")
 def list_users(
     _: Annotated[User, Depends(require_admin)],
     page: int = Query(default=1, ge=1),
@@ -30,7 +30,7 @@ def list_users(
 
 
 @router.post(
-    "/",
+    "",
     response_model=UserRead,
     status_code=status.HTTP_201_CREATED,
     summary="Tambah user baru",

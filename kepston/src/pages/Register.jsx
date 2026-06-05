@@ -4,18 +4,17 @@ import { useNavigate } from "react-router-dom";
 export default function Register() {
   const navigate = useNavigate();
   const [form, setForm] = useState({
-    nama: "",
     username: "",
     email: "",
+    role: "manager",
     password: "",
     confirmPassword: "",
   });
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (
-      !form.nama ||
       !form.username ||
       !form.email ||
       !form.password ||
@@ -30,8 +29,30 @@ export default function Register() {
       return;
     }
 
-    alert("Register berhasil!");
-    navigate('/login');
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:8090";
+      const response = await fetch(`${apiUrl}/api/auth/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          username: form.username,
+          email: form.email,
+          password: form.password,
+          role: form.role
+        }),
+      });
+
+      if (response.ok) {
+        alert("Register berhasil!");
+        navigate('/login');
+      } else {
+        const err = await response.json();
+        alert("Register gagal: " + (err.detail || "Terjadi kesalahan."));
+      }
+    } catch (error) {
+      console.error("Register error:", error);
+      alert("Terjadi kesalahan jaringan.");
+    }
   };
 
   return (
@@ -262,6 +283,19 @@ export default function Register() {
                 }
                 style={inputStyle}
               />
+            </div>
+
+            {/* Role */}
+            <div style={{ marginBottom: 16 }}>
+              <label style={labelStyle}>Role</label>
+              <select
+                value={form.role}
+                onChange={(e) => setForm({ ...form, role: e.target.value })}
+                style={{ ...inputStyle, cursor: "pointer", background: "#fff" }}
+              >
+                <option value="manager">Manager</option>
+                <option value="admin">Admin</option>
+              </select>
             </div>
 
             {/* Password */}

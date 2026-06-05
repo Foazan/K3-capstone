@@ -17,6 +17,7 @@ class User(Base):
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     username = Column(String(50), unique=True, index=True, nullable=False)
+    email = Column(String(255), unique=True, index=True, nullable=True)
     password = Column(Text, nullable=False, comment="bcrypt hashed password")
     role = Column(
         Enum(UserRole, values_callable=lambda x: [e.value for e in x]),

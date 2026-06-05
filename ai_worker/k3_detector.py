@@ -16,8 +16,8 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 # ==========================================
 # CONFIGURATION
 # ==========================================
-MODEL_PATH = "ai_worker/weights/best2.pt"
-CAMERA_SOURCE = "http://10.234.177.47:81/stream"
+MODEL_PATH = "ai_worker/weights/best3.pt"
+CAMERA_SOURCE = ""
 API_ENDPOINT = "http://localhost:8090/api/violations/detect"
 CAMERA_ID = 1
 CONFIDENCE_THRESHOLD = 0.6
@@ -27,7 +27,7 @@ COOLDOWN_SECONDS = 30 # Waktu jeda (detik) per kelas pelanggaran
 # FLASK INIT
 # ==========================================
 app = Flask(__name__)
-CORS(app)  # Tambahkan CORS agar React (port 5173/5174) bisa mengakses stream ini
+CORS(app, resources={r"/*": {"origins": "*"}})  # Mengizinkan semua origin termasuk localhost:5173
 
 # ==========================================
 # INITIALIZATION
@@ -45,31 +45,59 @@ except Exception as e:
     logging.error(f"Gagal memuat model YOLO: {e}")
     exit(1)
 
-# Inisialisasi Kamera Global dengan urllib
+from flask import Flask, Response, request
+
+# ... imports ... (not replacing top imports to avoid messing up)
+# Let's replace from line 48 downwards.
+
+# Inisialisasi Kamera Global
 stream = None
-max_retries = 3
-retry_count = 0
+stream_lock = threading.Lock()
 
-while retry_count < max_retries:
-    try:
-        if isinstance(CAMERA_SOURCE, int) or str(CAMERA_SOURCE).isdigit():
-            stream = cv2.VideoCapture(int(CAMERA_SOURCE), cv2.CAP_DSHOW)
-            if stream.isOpened():
-                logging.info(f"Berhasil terhubung ke kamera lokal: {CAMERA_SOURCE}")
-                break
-        else:
-            # Menggunakan urllib untuk membaca stream MJPEG
-            stream = urllib.request.urlopen(CAMERA_SOURCE, timeout=10)
-            logging.info(f"Berhasil terhubung ke stream HTTP: {CAMERA_SOURCE}")
-            break
-    except Exception as e:
-        retry_count += 1
-        logging.warning(f"Gagal membuka sumber kamera. Percobaan {retry_count} dari {max_retries}. Error: {e}. Menunggu 2 detik...")
-        time.sleep(2)
+def connect_camera():
+    global stream, CAMERA_SOURCE
+    with stream_lock:
+        if stream is not None:
+            try:
+                if hasattr(stream, 'release'):
+                    stream.release()
+                elif hasattr(stream, 'close'):
+                    stream.close()
+            except:
+                pass
+        
+        if not CAMERA_SOURCE:
+            logging.info("CAMERA_SOURCE kosong. Menunggu koneksi dari frontend...")
+            stream = None
+            return False
 
-if stream is None or (isinstance(stream, cv2.VideoCapture) and not stream.isOpened()):
-    logging.error(f"Gagal membuka sumber kamera {CAMERA_SOURCE} setelah {max_retries} percobaan. Keluar...")
-    exit(1)
+        logging.info(f"Mencoba menghubungkan ke {CAMERA_SOURCE}...")
+        stream = None
+        max_retries = 3
+        retry_count = 0
+        
+        while retry_count < max_retries:
+            try:
+                if isinstance(CAMERA_SOURCE, int) or str(CAMERA_SOURCE).isdigit():
+                    stream = cv2.VideoCapture(int(CAMERA_SOURCE), cv2.CAP_DSHOW)
+                    if stream.isOpened():
+                        logging.info(f"Berhasil terhubung ke kamera lokal: {CAMERA_SOURCE}")
+                        return True
+                else:
+                    # Menggunakan urllib untuk membaca stream MJPEG
+                    stream = urllib.request.urlopen(CAMERA_SOURCE, timeout=10)
+                    logging.info(f"Berhasil terhubung ke stream HTTP: {CAMERA_SOURCE}")
+                    return True
+            except Exception as e:
+                retry_count += 1
+                logging.warning(f"Gagal membuka sumber kamera. Percobaan {retry_count} dari {max_retries}. Error: {e}")
+                time.sleep(2)
+        
+        logging.error(f"Gagal membuka sumber kamera {CAMERA_SOURCE} secara total.")
+        return False
+
+# Panggil koneksi pertama kali
+connect_camera()
 
 # Dictionary mapping untuk menerjemahkan ID YOLO menjadi ID Database
 DB_ID_MAPPING = {
@@ -148,15 +176,33 @@ def generate_frames():
     bytes_data = b''
     
     while True:
+        with stream_lock:
+            current_stream = stream
+            
+        if current_stream is None or not CAMERA_SOURCE:
+            # Yield standby frame
+            standby_frame = np.zeros((480, 640, 3), dtype=np.uint8)
+            cv2.putText(standby_frame, "CAMERA STANDBY", (150, 240), 
+                        cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
+            ret, buffer = cv2.imencode('.jpg', standby_frame)
+            if ret:
+                frame_bytes = buffer.tobytes()
+                yield (b'--frame\r\n'
+                       b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
+            time.sleep(1)
+            continue
+            
         frame = None
-        if isinstance(stream, cv2.VideoCapture):
-            ret, frame = stream.read()
+        if isinstance(current_stream, cv2.VideoCapture):
+            ret, frame = current_stream.read()
             if not ret:
                 logging.error("Gagal membaca frame dari kamera lokal. Menutup stream...")
-                break
+                time.sleep(1)
+                connect_camera()
+                continue
         else:
             try:
-                bytes_data += stream.read(1024)
+                bytes_data += current_stream.read(1024)
                 a = bytes_data.find(b'\xff\xd8')
                 b = bytes_data.find(b'\xff\xd9')
                 if a != -1 and b != -1:
@@ -165,7 +211,10 @@ def generate_frames():
                     frame = cv2.imdecode(np.frombuffer(jpg, dtype=np.uint8), cv2.IMREAD_COLOR)
             except Exception as e:
                 logging.error(f"Error membaca dari stream HTTP: {e}")
-                break
+                bytes_data = b''
+                time.sleep(1)
+                connect_camera()
+                continue
                 
         if frame is None:
             continue
@@ -226,6 +275,42 @@ def generate_frames():
         yield (b'--frame\r\n'
                b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
                
+@app.route('/status', methods=['GET'])
+def get_status():
+    return {"current_url": CAMERA_SOURCE}, 200
+
+@app.route('/update_stream', methods=['POST'])
+def update_stream():
+    global CAMERA_SOURCE, CAMERA_ID, stream
+    data = request.json
+    new_url = data.get('url')
+    new_id = data.get('camera_id')
+    
+    if new_url == "" or new_url is None:
+        with stream_lock:
+            if stream is not None:
+                try:
+                    if hasattr(stream, 'release'):
+                        stream.release()
+                    elif hasattr(stream, 'close'):
+                        stream.close()
+                except:
+                    pass
+            stream = None
+            CAMERA_SOURCE = None
+        logging.info("Kamera dinonaktifkan via API.")
+        return {"status": "success", "message": "Kamera berhasil dimatikan"}, 200
+
+    if new_url and new_url != CAMERA_SOURCE:
+        CAMERA_SOURCE = new_url
+        if new_id:
+            CAMERA_ID = new_id
+        # Start reconnect in background to avoid blocking API
+        threading.Thread(target=connect_camera).start()
+        return {"status": "success", "message": f"Menghubungkan ke {new_url}"}, 200
+    
+    return {"status": "ignored", "message": "URL sama atau kosong"}, 200
+
 @app.route('/video_feed')
 def video_feed():
     return Response(generate_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')

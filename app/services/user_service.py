@@ -26,6 +26,7 @@ def get_user_list(db: Session, skip: int = 0, limit: int = 50) -> Tuple[List[Use
 def create_user(db: Session, data: UserCreate) -> User:
     db_user = User(
         username=data.username,
+        email=data.email,
         password=get_password_hash(data.password),
         role=data.role.value,
     )

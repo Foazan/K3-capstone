@@ -26,7 +26,7 @@ export default function IdentifyModal({ data, onClose, onSuccess }) {
       });
 
       if (response.ok) {
-        alert("Data pelanggar berhasil divalidasi dan disimpan!");
+        alert("Pelanggaran berhasil ditindak");
         if (onSuccess) onSuccess(data.id, nama, userId);
         onClose();
       } else {

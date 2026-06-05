@@ -3,6 +3,7 @@ import GlobalNotification from "./components/GlobalNotification";
 import Dashboard from "./pages/Dashboard";
 import LiveCCTV from "./pages/LiveCCTV";
 import Report from "./pages/Report";
+import Users from "./pages/Users";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 
@@ -25,6 +26,7 @@ function App() {
         <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
         <Route path="/live-cctv" element={<ProtectedRoute><LiveCCTV /></ProtectedRoute>} />
         <Route path="/laporan" element={<ProtectedRoute><Report /></ProtectedRoute>} />
+        <Route path="/pengguna" element={<ProtectedRoute><Users /></ProtectedRoute>} />
       </Routes>
     </Router>
     </>

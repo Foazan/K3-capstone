@@ -8,6 +8,7 @@ from app.models.user import UserRole
 
 class UserBase(BaseModel):
     username: str = Field(..., min_length=3, max_length=50, examples=["admin_k3"])
+    email: Optional[str] = Field(None, max_length=255, examples=["admin@example.com"])
     role: UserRole = UserRole.MANAGER
 
     @field_validator("role", mode="before")
@@ -32,6 +33,7 @@ class UserCreate(UserBase):
 class UserUpdate(BaseModel):
     """Partial update user (Admin only)."""
     username: Optional[str] = Field(None, min_length=3, max_length=50)
+    email: Optional[str] = Field(None, max_length=255)
     password: Optional[str] = Field(None, min_length=8, max_length=72)
     role: Optional[UserRole] = None
 
