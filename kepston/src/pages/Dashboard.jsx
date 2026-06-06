@@ -25,7 +25,7 @@ function Dashboard() {
         const token = localStorage.getItem("token") || "";
 
         // Fetch Violations
-        const response = await fetch(`${apiUrl}/api/violations/?page_size=100`, {
+        const response = await fetch(`${apiUrl}/api/violations/?page_size=5000`, {
           headers: { "Authorization": `Bearer ${token}` }
         });
 

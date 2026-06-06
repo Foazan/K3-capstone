@@ -16,7 +16,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 # ==========================================
 # CONFIGURATION
 # ==========================================
-MODEL_PATH = "ai_worker/weights/best3.pt"
+MODEL_PATH = "ai_worker/weights/best4.pt"
 CAMERA_SOURCE = ""
 API_ENDPOINT = "http://localhost:8090/api/violations/detect"
 CAMERA_ID = 1
@@ -101,18 +101,18 @@ connect_camera()
 
 # Dictionary mapping untuk menerjemahkan ID YOLO menjadi ID Database
 DB_ID_MAPPING = {
-    7: 0,  # 'No_Harness' -> Tidak Pakai Rompi
-    8: 1,  # 'No_Helmet' -> Tidak Pakai Helm
-    5: 2,  # 'No_Glove' -> Tidak Pakai Sarung Tangan
-    12: 3  # 'no boots' -> Tidak Pakai Sepatu
+    5: 0,  # 'no-safety-vest' -> Tidak Pakai Rompi
+    3: 1,  # 'no-hardhat' -> Tidak Pakai Helm
+    2: 2,  # 'no-gloves' -> Tidak Pakai Sarung Tangan
+    6: 3   # 'no-shoes' -> Tidak Pakai Sepatu
 }
 
 # Dictionary terjemahan kelas untuk tampilan (berdasarkan ID kelas YOLO)
 TRANSLATIONS = {
-    7: "Tidak Pakai Rompi",
-    8: "Tidak Pakai Helm",
-    5: "Tidak Pakai Sarung Tangan",
-    12: "Tidak Pakai Sepatu"
+    5: "Tidak Pakai Rompi",
+    3: "Tidak Pakai Helm",
+    2: "Tidak Pakai Sarung Tangan",
+    6: "Tidak Pakai Sepatu"
 }
 
 # Menyimpan waktu deteksi terakhir untuk sistem cooldown

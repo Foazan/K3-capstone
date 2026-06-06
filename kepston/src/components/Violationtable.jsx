@@ -1,25 +1,36 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import IdentifyModal from './IdentifyModal';
-
-
 
 export default function ViolationTable({ data = [], onUpdateRow }) {
   const [showModal, setShowModal] = useState(false);
   const [selectedRow, setSelectedRow] = useState(null);
   const [showIdentifyModal, setShowIdentifyModal] = useState(false);
 
-  // const handleStatusToggle = (id) => {
-  //   setData(prev => prev.map(row =>
-  //     row.id === id
-  //       ? { ...row, status: row.status === 'Sudah Ditindak' ? 'Belum Ditindak' : 'Sudah Ditindak' }
-  //       : row
-  //   ));
-  // };
+  // Client-side pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [data]);
+
+  const totalPages = Math.ceil(data.length / itemsPerPage) || 1;
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const currentData = data.slice(startIndex, startIndex + itemsPerPage);
+
+  const handlePrevPage = () => {
+    if (currentPage > 1) setCurrentPage(currentPage - 1);
+  };
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) setCurrentPage(currentPage + 1);
+  };
 
   const handleLihatBukti = (row) => {
     setSelectedRow(row);
     setShowModal(true);
   };
+
   const handleOpenIdentify = (row) => {
   if (row.status === "Belum Ditindak") {
     setSelectedRow(row);
@@ -35,7 +46,6 @@ const handleIdentifySubmit = (id, nama, user_id) => {
       user_id,
     });
   }
-
   setShowIdentifyModal(false);
 };
 
@@ -44,13 +54,6 @@ const handleIdentifySubmit = (id, nama, user_id) => {
       <div className="d-flex justify-content-between align-items-center mb-3">
         <h6 style={{ fontWeight: 700, margin: 0 }}>Data Pelanggaran</h6>
         <div className="d-flex gap-2">
-          <button style={{
-            background: 'none', border: '1px solid #e5e7eb', borderRadius: 8,
-            padding: '5px 14px', fontSize: 12.5, fontWeight: 600, cursor: 'pointer',
-            fontFamily: 'inherit', color: '#374151'
-          }}>
-            ⬇ Export
-          </button>
         </div>
       </div>
 
@@ -67,7 +70,7 @@ const handleIdentifySubmit = (id, nama, user_id) => {
             </tr>
           </thead>
           <tbody>
-            {data.map(row => (
+            {currentData.map(row => (
               <tr key={row.id}>
                 <td style={{ fontWeight: 500 }}>{row.tanggal}</td>
                 <td style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 13 }}>{row.waktu}</td>
@@ -107,9 +110,68 @@ const handleIdentifySubmit = (id, nama, user_id) => {
                 </td>
               </tr>
             ))}
+            {currentData.length === 0 && (
+              <tr>
+                <td colSpan="6" style={{ textAlign: 'center', padding: '20px' }}>Tidak ada data</td>
+              </tr>
+            )}
           </tbody>
         </table>
         
+      </div>
+
+      <div className="d-flex justify-content-between align-items-center mt-3">
+        <div className="d-flex align-items-center gap-3">
+          <span style={{ fontSize: 13, color: '#6b7280' }}>
+            Menampilkan {data.length === 0 ? 0 : startIndex + 1} - {Math.min(startIndex + itemsPerPage, data.length)} dari {data.length} pelanggaran
+          </span>
+          <div className="d-flex align-items-center gap-2">
+            <span style={{ fontSize: 13, color: '#6b7280' }}>Baris:</span>
+            <select 
+              value={itemsPerPage} 
+              onChange={(e) => {
+                setItemsPerPage(Number(e.target.value));
+                setCurrentPage(1);
+              }}
+              style={{
+                fontSize: 13, padding: '2px 8px', borderRadius: 6, border: '1px solid #e5e7eb', color: '#374151', cursor: 'pointer'
+              }}
+            >
+              <option value={5}>5</option>
+              <option value={10}>10</option>
+              <option value={20}>20</option>
+              <option value={50}>50</option>
+              <option value={100}>100</option>
+            </select>
+          </div>
+        </div>
+        <div className="d-flex gap-2">
+          <button 
+            onClick={handlePrevPage} 
+            disabled={currentPage === 1}
+            style={{
+              background: currentPage === 1 ? '#f3f4f6' : '#fff',
+              border: '1px solid #e5e7eb',
+              borderRadius: 6, padding: '5px 12px', fontSize: 13, cursor: currentPage === 1 ? 'not-allowed' : 'pointer'
+            }}
+          >
+            ← Prev
+          </button>
+          <span style={{ fontSize: 13, alignSelf: 'center', fontWeight: 600 }}>
+            Halaman {currentPage} dari {totalPages}
+          </span>
+          <button 
+            onClick={handleNextPage} 
+            disabled={currentPage === totalPages}
+            style={{
+              background: currentPage === totalPages ? '#f3f4f6' : '#fff',
+              border: '1px solid #e5e7eb',
+              borderRadius: 6, padding: '5px 12px', fontSize: 13, cursor: currentPage === totalPages ? 'not-allowed' : 'pointer'
+            }}
+          >
+            Next →
+          </button>
+        </div>
       </div>
       {showIdentifyModal && selectedRow && (
         <IdentifyModal

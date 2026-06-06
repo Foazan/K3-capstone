@@ -100,7 +100,7 @@ def get_stats(
 )
 def list_violations(
     page: int = Query(default=1, ge=1),
-    page_size: int = Query(default=20, ge=1, le=100),
+    page_size: int = Query(default=20, ge=1, le=5000),
     camera_id: Optional[int] = Query(default=None, description="Filter kamera"),
     violation_type_id: Optional[int] = Query(default=None, description="Filter jenis"),
     status_filter: Optional[ViolationStatus] = Query(

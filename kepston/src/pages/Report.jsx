@@ -54,7 +54,7 @@ export default function Report() {
         }
 
         // 3. Fetch laporan pelanggaran (ambil lebih banyak data untuk tabel agar sinkron)
-        const response = await fetch(`${apiUrl}/api/violations/?page_size=100`, { headers });
+        const response = await fetch(`${apiUrl}/api/violations/?page_size=5000`, { headers });
         
         if (!response.ok) {
           console.error("Gagal mengambil data laporan:", await response.text());
