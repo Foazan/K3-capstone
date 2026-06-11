@@ -9,6 +9,7 @@ Mencakup:
   - PUT  /{id}/status : Update status + notifikasi WhatsApp
 """
 import math
+import pytz
 from datetime import datetime
 from typing import Annotated, Optional, List
 
@@ -175,7 +176,7 @@ def bulk_update_status(
             log = updated_logs[0]
             area = log.camera.area_name if log.camera else "Tidak diketahui"
             label = log.violation_type.label_name if log.violation_type else "Tidak diketahui"
-            waktu = log.created_at.strftime("%d %b %Y %H:%M") if log.created_at else "Waktu tidak diketahui"
+            waktu = log.created_at.replace(tzinfo=pytz.UTC).astimezone(pytz.timezone('Asia/Jakarta')).strftime("%d %b %Y %H:%M") if log.created_at else "Waktu tidak diketahui"
             
             pesan = (
                 f"🚨 *PERINGATAN K3!*\n\n"
@@ -228,7 +229,7 @@ def update_status(
     if payload.status == ViolationStatus.SUDAH_DITINDAK:
         area = log.camera.area_name if log.camera else "Tidak diketahui"
         label = log.violation_type.label_name if log.violation_type else "Tidak diketahui"
-        waktu = log.created_at.strftime("%d %b %Y %H:%M") if log.created_at else "Waktu tidak diketahui"
+        waktu = log.created_at.replace(tzinfo=pytz.UTC).astimezone(pytz.timezone('Asia/Jakarta')).strftime("%d %b %Y %H:%M") if log.created_at else "Waktu tidak diketahui"
         
         pesan = (
             f"🚨 *PERINGATAN K3!*\n\n"
@@ -277,7 +278,7 @@ def validate_violation_endpoint(
     # Format pesan teks WA
     area = updated_log.camera.area_name if updated_log.camera else "Tidak diketahui"
     label = updated_log.violation_type.label_name if updated_log.violation_type else "Tidak diketahui"
-    waktu = updated_log.created_at.strftime("%d %b %Y %H:%M") if updated_log.created_at else "Waktu tidak diketahui"
+    waktu = updated_log.created_at.replace(tzinfo=pytz.UTC).astimezone(pytz.timezone('Asia/Jakarta')).strftime("%d %b %Y %H:%M") if updated_log.created_at else "Waktu tidak diketahui"
     
     pesan = (
         f"🚨 *PERINGATAN K3!*\n\n"
